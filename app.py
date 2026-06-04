@@ -48,14 +48,11 @@ with st.form("career_form"):
     interests = st.text_input("Your Interests", placeholder="e.g. AI/ML, building web apps, competitive programming")
     goal = st.text_input("Career Goal", placeholder="e.g. SDE at a product company or AI startup")
 
-    api_key = st.text_input("Groq API Key", type="password", placeholder="gsk_...")
-    st.caption("Get your free key at [console.groq.com](https://console.groq.com)")
-
     submitted = st.form_submit_button("✨ Generate My Career Roadmap", use_container_width=True, type="primary")
 
 if submitted:
-    if not all([name, degree, skills, interests, goal, api_key]):
-        st.error("Please fill in all fields including your API key.")
+    if not all([name, degree, skills, interests, goal]):
+        st.error("Please fill in all fields.")
         st.stop()
 
     prompt = f"""You are a career advisor for college students in India. Analyze this student profile and return career guidance.
@@ -95,7 +92,7 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
 
     with st.spinner("Analyzing your profile..."):
         try:
-            client = Groq(api_key=api_key)
+            client = Groq(api_key=st.secrets["GROQ_API_KEY"])
             response = client.chat.completions.create(
                 model="llama3-8b-8192",
                 messages=[{"role": "user", "content": prompt}]
@@ -112,11 +109,9 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
 
     st.divider()
 
-    # Career path
     st.markdown(f"## {result.get('careerEmoji', '🎯')} {result.get('careerPath', '')}")
     st.info(result.get("careerReason", ""))
 
-    # Skills
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("#### ✅ Skills You Have")
@@ -129,7 +124,6 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
 
     st.divider()
 
-    # Roadmap
     st.markdown("#### 🗓️ 3-Month Learning Roadmap")
     month_colors = ["#7c6ef5", "#3dd68c", "#f5a623"]
     for i, month in enumerate(result.get("roadmap", [])):
@@ -143,7 +137,6 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
 
     st.divider()
 
-    # Projects
     st.markdown("#### 🛠️ Project Ideas to Build")
     for i, proj in enumerate(result.get("projects", []), 1):
         st.markdown(f"""
@@ -155,7 +148,6 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact str
 
     st.divider()
 
-    # Interview tips
     st.markdown("#### 💡 Interview Preparation Tips")
     for tip in result.get("interviewTips", []):
         st.markdown(f"- {tip}")
